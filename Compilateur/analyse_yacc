@@ -1,0 +1,331 @@
+%{
+    #include <stdio.h> 
+    #include <stdlib.h>   
+    #include "symboltable.h"
+    #include "asm_instructions.h"
+
+
+    int yydebug = 1 ;
+
+%}
+
+%union {
+    int integer;
+    char* var;
+}
+
+%token tINT tVOID tMAIN tPO tPF tAO tAF tIF tELSE tWHILE tCONST tINF tSUP tAND tOR tXOR tEGAEGA tMUL tDIV tADD tSUB tEGA tCO tCF tVIR tFIN tPRINTF;
+
+%token <integer> tNUM;
+%token <integer> tFLOAT;
+%token <integer> tEXP;
+%token <var> tVAR;
+
+%type <integer> EXPRESSION;
+%type <integer> TERM;
+
+%type <integer> tAO ;
+%type <integer> tIF ;
+%type <integer> tWHILE ;
+
+
+%left tADD tSUB
+%left tMUL tDIV
+%left tEGA
+
+%start S ;
+
+%%
+
+
+S:     tINT tMAIN  tPO ARGS tPF BODY
+        {
+            print_asm_instructions();
+        }
+
+   |   tVOID  tMAIN tPO ARGS tPF BODY
+        {
+            print_asm_instructions();
+        }
+     
+   |   tMAIN tPO ARGS tPF BODY 
+        {
+            print_asm_instructions();
+        }
+       
+   ;
+
+
+BODY: tAO  
+    {
+           // $1 = get_depth();
+            increase_depth();
+    }
+
+    CONTENT  
+    tAF
+    {
+            decrease_depth();
+    } ;
+      
+        
+
+TYPE:   tINT
+    |   tCONST tINT ;
+
+
+ARGS:   
+    |   TYPE tVAR MULTIPLEAGRS;
+
+MULTIPLEAGRS: 
+    |   tVIR TYPE tVAR MULTIPLEAGRS;
+
+CONTENT:   
+    |   LINE tFIN CONTENT
+    |   IF CONTENT
+    |   IFLINE CONTENT
+    |   IFALONE CONTENT
+    |   WHILE CONTENT 
+    
+    ;
+
+
+LINE:   DECLARATION 
+
+    |   AFFECTATION 
+
+    |   tPRINTF  tPO  tVAR  tPF
+        {
+            int sym = find_symbol_address($3);
+			pri_inst(sym);
+        }
+
+    ;
+
+
+IF:     tIF tPO EXPRESSION tPF
+        { 
+            int line = get_nb_lines();
+            jmf_inst(); 
+            $1 = line;
+        } 
+        BODY
+        {
+            int current = get_nb_lines() ;
+            jmp_inst(0);
+            patch($1, current+1) ;
+            $1 = current;
+        }        
+        tELSE 
+        BODY
+        {
+            int current = get_nb_lines() ; 
+            patch($1, current) ;
+        } 
+        
+        ;
+
+IFALONE:   tIF tPO EXPRESSION tPF
+        { 
+            int line = get_nb_lines();
+            jmf_inst(); 
+            $1 = line;
+        } 
+        BODY
+        {
+            int current = get_nb_lines() ;
+            patch($1, current) ;
+        } 
+        
+        ;
+        
+IFLINE:    tIF tPO EXPRESSION tPF 
+        { 
+            int line = get_nb_lines();
+            jmf_inst(); 
+            $1 = line;
+        }
+    
+        LINE 
+        {
+            int current = get_nb_lines() ;
+            patch($1, current) ;
+        }
+        tFIN 
+        
+        ; 
+
+
+WHILE:  tWHILE tPO EXPRESSION tPF 
+        { 
+            int line = get_nb_lines();
+            jmf_inst(); 
+            $1 = line;
+        } 
+
+        BODY 
+        {
+            int current = get_nb_lines() ;
+            patch($1, current+1) ;
+            jmp_inst($1) ;
+        } 
+
+    |   tWHILE tPO EXPRESSION tPF 
+        { 
+            int line = get_nb_lines();
+            jmf_inst($1); 
+            $1 = line;
+        } 
+
+        LINE 
+        {
+            int current = get_nb_lines() ;
+            patch($1, current+1) ;
+            jmp_inst($1) ;
+        }
+        
+        tFIN 
+        
+        ;
+
+
+DECLARATION: tCONST TYPE tVAR MULTIPLE
+                {
+                    add_const($3);
+                } 
+
+        |   TYPE tVAR MULTIPLE
+                {
+                    add_var($2);
+                } 
+                
+        ;
+
+
+MULTIPLE:    
+
+        |   tVIR tVAR MULTIPLE 
+                {
+                    add_var($2);
+                }
+        ;
+
+
+AFFECTATION: tVAR tEGA EXPRESSION
+            {
+                int result = find_symbol_address($1);
+                afc_inst(result, $3);
+                free_temp();
+            }
+        |       
+            ; 
+
+
+EXPRESSION: TERM
+
+        |   EXPRESSION tMUL EXPRESSION 
+            {
+                int temp = add_temp();
+                mul_inst(temp, $1, $3);
+                $$ = temp ;
+            }
+
+        |   EXPRESSION tDIV EXPRESSION 
+            {
+                int temp = add_temp();
+                div_inst(temp, $1, $3);
+                $$ = temp ;
+            }
+
+        |   EXPRESSION tADD EXPRESSION 
+            {
+                int temp = add_temp();
+                add_inst(temp, $1, $3);
+                $$ = temp ;
+            }
+
+        |   EXPRESSION tSUB EXPRESSION 
+            {
+                int temp = add_temp();
+                sub_inst(temp, $1, $3);
+                $$ = temp ;
+            }
+
+        |   EXPRESSION tEGAEGA EXPRESSION 
+            {
+                int temp = add_temp();
+                equ_inst(temp, $1, $3);
+                $$ = temp ;
+            }
+
+        |   EXPRESSION tINF EXPRESSION 
+            {
+                int temp = add_temp();
+                inf_inst(temp, $1, $3);
+                $$ = temp ;
+            }
+
+        |   EXPRESSION tSUP EXPRESSION 
+            {
+                int temp = add_temp();
+                sup_inst(temp, $1, $3);
+                $$ = temp ;
+            }
+
+        |    tPO  EXPRESSION  tPF 
+            {
+                int temp = add_temp();
+                afc_inst(temp, $2);
+                $$ = temp ;
+            }
+            
+        ;
+            
+TERM:  tNUM  
+            {
+                int temp = add_temp();
+                afc_inst(temp, $1);
+                $$ = temp ;
+            }
+
+        |   tFLOAT  
+            {
+                int temp = add_temp();
+                afc_inst(temp, $1);
+                $$ = temp ;
+            }
+
+        |   tEXP  
+            {
+                int temp = add_temp();
+                afc_inst(temp, $1);
+                $$ = temp ;
+            }
+
+        |   tVAR  
+            {
+                int temp = add_temp();
+                int var = find_symbol_address($1);
+                cop_inst(temp,var);
+                $$ = temp ;
+            }
+            
+        ;
+
+
+%%
+
+yyerror(char *s)
+{
+    fprintf(stderr, "%s\n", s) ;
+}
+
+int yywrap()
+{
+    return(1);
+}
+
+main()
+{
+    return yyparse() ;
+}

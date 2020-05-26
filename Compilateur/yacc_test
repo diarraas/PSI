@@ -1,0 +1,123 @@
+%{
+    #include <stdio.h>  
+    int yydebug = 1 ;
+%}
+
+
+%token tINT tVOID tMAIN tPO tPF tAO tAF tCONST tMUL tDIV tADD tSUB tEGA tCO tCF tVIR tFIN tVAR tNUM tFLOAT tEXP tSTRING tPRINTF;
+%start S ;
+
+%%
+
+
+//Règles syntaxiques
+S: tINT  tMAIN   tPO  tPF BODY
+   |    tVOID  tMAIN   tPO  tPF BODY
+   |    tMAIN   tPO  tPF BODY
+    {
+        printf("Dans le main\n");
+    };
+
+BODY: tAO  CONTENT  tAF   ; // Déclaration 
+
+CONTENT:  
+        |   DECLARATION CONTENT
+
+        |   EXPRESSION OPERATION EXPRESSION tFIN CONTENT
+
+        |   tVAR tEGA EXPRESSION tFIN CONTENT
+            {
+                printf("Une affectation\n");
+            }
+
+        |   tVAR tEGA EXPRESSION tFIN CONTENT
+            {
+                printf("Une affectation\n");
+            }
+        |   tPRINTF  tPO  tVAR  tPF  tFIN CONTENT
+            {
+                printf("un printf \n");
+            }
+	    |   tPRINTF  tPO '\"'  tSTRING '\"'  tPF tFIN CONTENT 
+            {
+                printf("un printf \n");
+            };
+
+OPERATION: tMUL 
+        {
+            printf("Une multiplication\n");
+        }
+    |      tDIV 
+        {
+            printf("Une division\n");
+        }
+    |      tADD 
+        {
+            printf("Une addition\n");
+        };
+
+DECLARATION:   tCONST tINT tVAR  MULTIPLE  
+            {
+                printf("une Déclaration const int \n");
+            }
+
+	    | tINT  tVAR MULTIPLE
+            {
+                printf("une Déclaration int \n");
+            };
+
+MULTIPLE:   tFIN 
+        |   tVIR tVAR MULTIPLE
+            { 
+                printf("une Déclaration multiple \n");
+
+            };
+
+EXPRESSION: tVAR  
+            {
+                printf("une variable \n");
+            }
+        |
+            tVAR OPERATION EXPRESSION
+        |   tNUM  
+            {
+                printf("une nombre \n");
+            }
+        |   tFLOAT  
+            {
+                printf("un réel \n");
+            }
+        |   tEXP  
+            {
+                printf("un exponent \n");
+            }
+        |    tPO  EXPRESSION  tPF 
+            {
+                printf("une expression parenthésée \n");
+            }
+            
+        |    tPO  EXPRESSION  tPF OPERATION EXPRESSION
+            {
+                printf("ensemble d'expressionS \n");
+            };
+
+//Actions
+
+
+%%
+
+yyerror(char *s)
+{
+    fprintf(stderr, "%s\n", s) ;
+}
+
+int yywrap()
+{
+    return(1);
+}
+
+main()
+{
+    return yyparse() ;
+}
+

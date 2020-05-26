@@ -1,0 +1,37 @@
+%{
+
+	#include "y.tab.h"
+%}
+
+
+%%
+int return tINT;
+const return tCONST;
+void return tVOID;
+main return tMAIN;
+printf return tPRINTF;
+\( return tPO;
+\) return tPF;
+\{ return tAO;
+\} return tAF;
+\* return tMUL;
+\/ return tDIV;
+\+ return tADD;
+\- return tSUB;
+\= return tEGA;
+\[ return tCO;
+\] return tCF;
+\, return tVIR;
+\; return tFIN;
+[a-z][a-z0-9_]* return tVAR;
+[0-9]+"."[0-9]+ return tFLOAT;
+[0-9]+"e"[0-9]+ return tEXP; 
+[0-9]+"e"[0-9]+ return tEXP;
+[0-9]+ return tNUM;
+[a-zA-Z]+ return tSTRING ;
+[\n]+ ;
+" " ;
+[\t]+ ;
+[\b]+ ; 
+%%
+

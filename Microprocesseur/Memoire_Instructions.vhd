@@ -43,9 +43,13 @@ end Memoire_Instructions;
 	 
 begin
 ROM(0) <= X"06050F00"; -- AFC R5 15
---ROM(0) <= X"01050F01"; -- ADD R5 R15 R1
---ROM(0) <= X"05010200"; -- COP R1 R2
---ROM(0) <= X"05020500"; -- COP R2 R5 
+ROM(6) <= X"06060A00"; -- AFC R6 10
+ROM(12) <= X"05010500"; -- COP R1 R5 
+ROM(18) <= X"05020600"; -- COP R2 R6 
+ROM(24) <= X"01030102"; -- ADD R3 R1 R2 
+ROM(40) <= x"08040300"; -- STORE @4 R3
+ROM(46) <= X"07070400"; -- LOAD 7 @4
+
 process (CLK)	
 	begin
 	if CLK'event and CLK = '1' then 

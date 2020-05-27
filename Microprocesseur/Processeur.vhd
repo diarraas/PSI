@@ -89,8 +89,8 @@ end Processeur;
 	signal MEMRE : STD_LOGIC_VECTOR(31 downto 0); -- A - OP - B
 
 	--INSTRUCTION MEMORY SIGNALS 
-	signal IP :curseur; --counter(integer) on l'incremente à chaque front montant de clk
-	signal DATA_OUT: STD_LOGIC_VECTOR(31 downto 0); -- recupère les instructions
+	signal IP :curseur; --counter(integer) on l'incremente Ã  chaque front montant de clk
+	signal DATA_OUT: STD_LOGIC_VECTOR(31 downto 0); -- recupÃ¨re les instructions
 	
 	--REGISTER BENCH SIGNALS
 	signal a_A : STD_LOGIC_VECTOR(2 downto 0);
@@ -121,25 +121,20 @@ begin
 	ALU:  UAL port map(A,B,Ctrl_Alu,open, open, open, S);
 	MD:  Memoire_Donnees port map(IP_MD, DATA_IN,RW, RST, CLK, DATA_MOUT);
 	
-	-- first level of pipeline (link to register bench)
-		
+	-- first level of pipeline (link to register bench)	
 	a_A <= LIDI(10 downto 8);
 	a_B <= LIDI(2 downto 0);
 	a_W <= MEMRE(26 downto 24);
 	DATA <= MEMRE(15 downto 8);
 	
-	A<= DIEX(15 downto 8);
-	B<= DIEX(7 downto 0);
+	--A<= DIEX(15 downto 8);
+	--B<= DIEX(7 downto 0);
+	
+	-- Second level of pipeline (linked to ALU)
 	with DIEX(23 downto 16) select -- DIEX_OP
 		Ctrl_Alu <= DIEX(18 downto 16) when "00000001", --ADD
 		DIEX(18 downto 16) when "00000011", --SOU
 		DIEX(18 downto 16) when "00000010"; --MUL	
-	
-	with EXMEM(23 downto 16) select -- EXEM_OP
-		IP_MD <= EXMEM(31 downto 24) when "00001000", --STORE
-		EXMEM(15 downto 8) when "00000111"; --LOAD
-		
-	-- Second level of pipeline (linked to ALU)
 		
 	with DIEX(23 downto 16) select -- DIEX_OP
 		A <= DIEX(15 downto 8) when "00000001", --ADD
@@ -150,11 +145,7 @@ begin
 		B <= DIEX(7 downto 0) when "00000001", --ADD
 		DIEX(7 downto 0) when "00000011", --SOU
 		DIEX(7 downto 0) when "00000010"; --MUL
-	
-	with DIEX(23 downto 16) select -- DIEX_OP
-		Ctrl_Alu <= DIEX(18 downto 16) when "00000001", --ADD
-		DIEX(18 downto 16) when "00000011", --SOU
-		DIEX(18 downto 16) when "00000010"; --MUL	
+		
 			
 	--Third level of pipeline (linked Data Memory)
 	 
@@ -173,15 +164,12 @@ begin
 	
 	with MEMRE(23 downto 16) select -- MEMRE
 		W <= '1' when "00001000", --STORE ecriture
-		'0' when "00000111", --LOAD lecture
+		'1' when "00000111", --LOAD lecture
 		'1' when "00000001", --ADD
 		'1' when "00000011", --SOU
 		'1' when "00000010", --MUL	
 		'1' when "00000110", --AFC
-		'0' when "00000101"; --COP
-		
-	a_W <= MEMRE(26 downto 24);
-	DATA <= MEMRE(15 downto 8);
+		'1' when "00000101"; --COP
 	
 	process(CLK)
 	begin 
@@ -191,15 +179,19 @@ begin
 				LIDI(23 downto 16) <= DATA_OUT(31 downto 24); -- OP
 				LIDI(15 downto 0) <= DATA_OUT(15 downto 0); -- B, C
 				IP <= IP+1;
+				--DIEX(31 downto 16) <= LIDI(31 downto 16);
+				--EXMEM(31 downto 16) <= DIEX(31 downto 16);
+				--MEMRE(31 downto 16) <= EXMEM(31 downto 16);		
 				DIEX <= LIDI;
 				EXMEM <= DIEX;
-				MEMRE <= EXMEM;			
-				
-				if(LIDI(23 downto 16) = "00000001" or LIDI(23 downto 16) = "00000010" or LIDI(23 downto 16) = "00000011") then--MUL			
-					DIEX(15 downto 8) <= QA;
-					DIEX(7 downto 0) <= QB;
+				MEMRE <= EXMEM ;
+				DIEX(15 downto 8) <= QA;
+				DIEX(7 downto 0) <= QB;
+				if(DIEX(23 downto 16) = "00000001" or DIEX(23 downto 16) = "00000010" or DIEX(23 downto 16) = "00000011") then--MUL			
+					---if(DIEX(23 downto 16) = "00000001" or DIEX(23 downto 16) = "00000010" or DIEX(23 downto 16) = "00000011") then--MUL			
 					EXMEM(15 downto 8) <= S;
 					MEMRE (15 downto 8) <= EXMEM(15 downto 8); --B
+					--end if;
 					
 				elsif(LIDI(23 downto 16) = "00000101") then -- COP
 					DIEX(15 downto 8) <= QA;
@@ -223,7 +215,10 @@ begin
 				end if;
 			end if;
 		end if;
-	end process; 
+		if(LIDI(23 downto 16) = "00000001" or LIDI(23 downto 16) = "00000010" or LIDI(23 downto 16) = "00000011") then--MUL			
+					EXMEM(15 downto 8) <= S;
+					MEMRE (15 downto 8) <= EXMEM(15 downto 8);
+		end if;
+	end process;
 
 end Structural;
-

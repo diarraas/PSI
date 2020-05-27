@@ -79,10 +79,11 @@ BEGIN
 		CLK <= '0';
 		wait for CLK_period/2;
 		CLK <= '1';
+		RST <= '1';
 		wait for CLK_period/2;
    end process;
 		
-	RST <= '0';
+	--RST <= '0';
 	-- simu of processsor
 	--process
 	--begin

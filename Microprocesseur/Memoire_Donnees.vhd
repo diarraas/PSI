@@ -58,7 +58,7 @@ begin
 		if(RW = '0') then reg(to_integer(unsigned(IP)))(7 downto 0) <= DATA_IN(7 downto 0);
 		end if;
 		
-		if(RST = '1') then
+		if(RST = '0') then
 			for i in 0 to 255 loop
 				reg(i) <= "00000000";
 			end loop;

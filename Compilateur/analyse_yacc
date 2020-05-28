@@ -106,7 +106,7 @@ LINE:   DECLARATION
 IF:     tIF tPO EXPRESSION tPF
         { 
             int line = get_nb_lines();
-            jmf_inst(); 
+            jmf_inst($3); 
             $1 = line;
         } 
         BODY
@@ -128,7 +128,7 @@ IF:     tIF tPO EXPRESSION tPF
 IFALONE:   tIF tPO EXPRESSION tPF
         { 
             int line = get_nb_lines();
-            jmf_inst(); 
+            jmf_inst($3); 
             $1 = line;
         } 
         BODY
@@ -142,7 +142,7 @@ IFALONE:   tIF tPO EXPRESSION tPF
 IFLINE:    tIF tPO EXPRESSION tPF 
         { 
             int line = get_nb_lines();
-            jmf_inst(); 
+            jmf_inst($3); 
             $1 = line;
         }
     
@@ -159,7 +159,7 @@ IFLINE:    tIF tPO EXPRESSION tPF
 WHILE:  tWHILE tPO EXPRESSION tPF 
         { 
             int line = get_nb_lines();
-            jmf_inst(); 
+            jmf_inst($3); 
             $1 = line;
         } 
 
@@ -169,22 +169,6 @@ WHILE:  tWHILE tPO EXPRESSION tPF
             patch($1, current+1) ;
             jmp_inst($1) ;
         } 
-
-    |   tWHILE tPO EXPRESSION tPF 
-        { 
-            int line = get_nb_lines();
-            jmf_inst($1); 
-            $1 = line;
-        } 
-
-        LINE 
-        {
-            int current = get_nb_lines() ;
-            patch($1, current+1) ;
-            jmp_inst($1) ;
-        }
-        
-        tFIN 
         
         ;
 

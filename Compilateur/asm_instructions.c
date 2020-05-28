@@ -91,9 +91,9 @@ int jmp_inst(int address){
     return line_cmp;
 }
 
-int jmf_inst(){
+int jmf_inst(int address){
     char * s =  malloc(sizeof(char)*255);
-	sprintf(s, "JMF");
+	sprintf(s, "JMF %d", address);
 	insert(s);
     free(s);
     int result = line_cmp ;
@@ -112,10 +112,10 @@ void insert(char * codeasm){
 void print_asm_instructions(){
     FILE *fp;
     int i ;
-    fp=fopen("asm_code", "w");
+    fp=fopen("Interpreter/asm_code", "w");
     for(i = 0; i< line_cmp; i++){
         char* s =  malloc(sizeof(char)*255);
-        sprintf(s, "L%d:  %s\n", asm_table[i].line_nb,asm_table[i].code);
+        sprintf(s, "%s\n",asm_table[i].code);
         fprintf(fp, s);
         free(s);
     }
@@ -125,7 +125,7 @@ void print_asm_instructions(){
 void patch(int from, int to){
         asm_code* a = malloc(sizeof(asm_code));
         char * s =  malloc(sizeof(char)*255);
-	    sprintf(s, "%s  L%d",asm_table[from].code,to);
+	    sprintf(s, "%s %d",asm_table[from].code,to);
         a->code = strdup(s);
         a->line_nb = from;
         asm_table[from] = *a;

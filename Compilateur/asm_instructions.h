@@ -31,7 +31,7 @@ void pri_inst(int result);
 
 int jmp_inst(int address);
 
-int jmpf_inst();
+int jmf_inst(int address);
 
 void insert(char * code);
 

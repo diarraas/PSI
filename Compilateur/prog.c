@@ -1,5 +1,6 @@
 main()
 { int i, j,k ,r;
+ j = 1;
 if(j == i){
     r=j+i ;
     k = k + 1 ;
